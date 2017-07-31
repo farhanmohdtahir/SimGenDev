@@ -4,10 +4,13 @@
 #include <cstdlib>
 #include <algorithm>
 #include <sstream>
+#include <getopt.h>
 using namespace std;
 
 
 static const char base[4]={'A', 'T', 'G', 'C'};
+
+void help();
 
 char randomBase(){
 	int randNum;
@@ -36,13 +39,39 @@ bool checkRandLine(int * randSubsLine, int itr){
 return test; 
 }
 
-int main(){
-	int i=0, j=0, k=0, m=0, subsNum=5, subsLineNum=30, simReadNum=100, randBaseLoc[subsNum], randSubsLine[subsLineNum], randRange=22, randStart=2, randEnd, lineNum=6000;
+int main(int argc, char * argv []){
+	int i=0, j=0, k=0, m=0, subsNum=5, subsLineNum=30, simReadNum=100, randBaseLoc[subsNum], randSubsLine[subsLineNum], randRange=22, randStart=2, randEnd, lineNum=6000, opt=0;
     string in="mature.hsa.dna.fa", out="output.fastq", qtyLine="";
 	ifstream infile;
     ofstream outfile;
 	string line, totalLine[lineNum], totalLineStr, headLine[lineNum], subsLine, tempLine, fastqStr, randStartStr, randEndStr, randBaseLocChar, randBaseLocStr, subsLineRng, totalLineRng;
     char read[30], tempChar;
+
+//--------------------------------------------------------------------------------------------------------------------------------getopt
+    bool option=false;
+    //getopt function	
+    static struct option long_options[] = {
+        {"help",                       no_argument,       0,  'h' },
+        {"inputFile",              required_argument,     0,  'i' },
+        {"outputFile",             required_argument,     0,  'o' },                         
+        {0,                               0,              0,   0  }
+    };
+    
+        int long_index =0;
+    while ((opt = getopt_long_only(argc, argv,"", 
+                   long_options, &long_index )) != -1) {
+        switch (opt) {
+             case 'h' : help();option = true;
+                 break;
+             case 'i' : in = optarg;option = true;
+                 break;
+             case 'o' : out = optarg;option = true;
+                 break;                                               
+             default: help(); 
+                 exit(EXIT_FAILURE);
+        }
+    }
+    
 	infile.open(in.c_str());
 	while(getline(infile, line)){	 
 		if(line[i]!='>'){
@@ -149,7 +178,8 @@ int l=0;
         for(k=0; k<subsNum; k++){
             m=randBaseLoc[k]+1;
             randBaseLocChar=to_string(m);
-            randBaseLocStr+=randBaseLocChar+" "+totalLineStr[m-1]+">"+subsLine[m-1]+", ";
+            randBaseLocStr+=randBaseLocChar+" "+totalLineStr[m-1]+">"+subsLine[m-1];
+            if (k<subsNum-1) randBaseLocStr+=",";
         }
 
         qtyLine="";subsLineRng="";totalLineRng="";
@@ -160,7 +190,7 @@ int l=0;
                 subsLineRng+=subsLine[k];
             }
         for(k=0; k<subsLineRng.length(); k++){
-            qtyLine+="f";
+            qtyLine+="h";
         }
         fastqStr+=subsLineRng+"\n+\n"+qtyLine+"\n";
         ++l;
@@ -172,7 +202,7 @@ int l=0;
                 totalLineRng+=totalLineStr[k];
             }
         for(k=0; k<totalLineRng.length(); k++){
-            qtyLine+="f";
+            qtyLine+="h";
         }
         fastqStr+=totalLineRng+"\n+\n"+qtyLine+"\n";            
         }
@@ -182,4 +212,12 @@ outfile.open(out.c_str());
     outfile<<fastqStr;
 outfile.close();
     return 0;
+}
+
+void help(){
+	cout<<"FASTQSimGen"<<endl;
+	cout<<"Usage: ./ar -i inputFile -o outputFile -m mutationPercentage"<<endl;
+	cout<<"-i [required argument] - name of input file (.fa/.fasta)\n";
+	cout<<"-o [required argument] - name of output file (.fq/fastq)\n";
+	cout<<"Thank You\n";
 }
