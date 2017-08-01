@@ -41,13 +41,15 @@ return test;
 
 int main(int argc, char * argv []){
 	int i=0, j=0, k=0, m=0, subsNum=5, subsLineNum=30, simReadNum=100, randBaseLoc[subsNum], randSubsLine[subsLineNum], randRange=22, randStart=2, randEnd, lineNum=6000, opt=0;
+    int test=0;
     string in="mature.hsa.dna.fa", out="output.fastq", qtyLine="";
 	ifstream infile;
     ofstream outfile;
 	string line, totalLine[lineNum], totalLineStr, headLine[lineNum], subsLine, tempLine, fastqStr, randStartStr, randEndStr, randBaseLocChar, randBaseLocStr, subsLineRng, totalLineRng;
     char read[30], tempChar;
+    double subsPerc=20, subsNumTemp;
 
-//--------------------------------------------------------------------------------------------------------------------------------getopt
+//--------------------------------------------------------------------------------------------------------getopt
     bool option=false;
     //getopt function	
     static struct option long_options[] = {
@@ -87,7 +89,11 @@ int main(int argc, char * argv []){
     
 for (i=0; i<lineNum; i++){
 totalLineStr=totalLine[i];
-//--------------------------------------------------------------------------------------------------------set substitution location
+
+subsNumTemp=(subsPerc/100)*totalLineStr.length();
+subsNum=2;//round(subsNumTemp);
+
+//-----------------------------------------------------------------------------------------------------set substitution location
         subsLine="";
         if (totalLine[i]=="")break;
     for (j=0; j<subsNum; j++){
@@ -171,20 +177,32 @@ int l=0;
         if(randEnd>=totalLineStr.length()-1){
             randEnd=totalLineStr.length()-1;
         }
+        
         randStartStr=to_string(randStart+1);
         randEndStr=to_string(randEnd+1);
 
         randBaseLocStr="";
-        for(k=0; k<subsNum; k++){
-            m=randBaseLoc[k]+1;
-            randBaseLocChar=to_string(m);
-            randBaseLocStr+=randBaseLocChar+" "+totalLineStr[m-1]+">"+subsLine[m-1];
-            if (k<subsNum-1) randBaseLocStr+=",";
-        }
+            // for(k=0; k<subsNum; k++){
+            //     m=randBaseLoc[k]+1;
+            //     randBaseLocChar=to_string(m);
+            //     randBaseLocStr+=randBaseLocChar+" "+totalLineStr[m-1]+">"+subsLine[m-1];
+            //     if (k<subsNum-1) randBaseLocStr+=",";
+            // }        
 
         qtyLine="";subsLineRng="";totalLineRng="";
 
         if (j==randSubsLine[l]){
+            for(k=0; k<subsNum; k++){
+                if (randBaseLoc[k]>randStart&&randBaseLoc[k]<randEnd){
+                m=randBaseLoc[k]-randStart+1;
+                randBaseLocChar=to_string(m);
+                randBaseLocStr+=randBaseLocChar+" "+totalLineStr[m-1]+">"+subsLine[randBaseLoc[k]];
+                if (k<subsNum-1) randBaseLocStr+=",";
+                }
+                else{
+                    if (k<subsNum-1) randBaseLocStr+=",";
+                }
+            }    
         fastqStr+=headLine[i]+"; "+randStartStr+ ":" + randEndStr+"; "+ randBaseLocStr+"\n";
             for(k=randStart; k<=randEnd; k++){
                 subsLineRng+=subsLine[k];
