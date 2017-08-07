@@ -40,14 +40,14 @@ return test;
 }
 
 int main(int argc, char * argv []){
-	int i=0, j=0, k=0, m=0, subsNum=5, subsLineNum=30, simReadNum=100, randBaseLoc[subsNum], randSubsLine[subsLineNum], randRange=22, randStart=2, randEnd, lineNum=6000, opt=0;
-    int test=0;
-    string in="mature.hsa.dna.fa", out="output.fastq", qtyLine="";
+	int i=0, j=0, k=0, m=0, readRange=0, subsNum=5, subsLineNum=30, simReadNum=100, randBaseLoc[subsNum], randSubsLine[subsLineNum], randRange=22, randStart=2, randEnd, lineNum=60000, opt=0;
+    int totalRange=6, subsPres[totalRange], rangeNum[totalRange], noSubsRange[totalRange];
+    string in="mature.hsa.dna.fa", out="output.fastq", qtyLine="", headLineTemp;
 	ifstream infile;
     ofstream outfile;
 	string line, totalLine[lineNum], totalLineStr, headLine[lineNum], subsLine, tempLine, fastqStr, randStartStr, randEndStr, randBaseLocChar, randBaseLocStr, subsLineRng, totalLineRng;
     char read[30], tempChar;
-    double subsPerc=20, subsNumTemp;
+    double subsPerc=10, subsNumTemp;
 
 //--------------------------------------------------------------------------------------------------------getopt
     bool option=false;
@@ -81,7 +81,9 @@ int main(int argc, char * argv []){
             ++j;
 	}	
     else {
-        headLine[k]=line;
+        headLineTemp=line;
+        headLineTemp[0]='@';
+        headLine[k]=headLineTemp;
         k++;
     }
     }
@@ -89,10 +91,12 @@ int main(int argc, char * argv []){
     
 for (i=0; i<lineNum; i++){
 totalLineStr=totalLine[i];
-
 subsNumTemp=(subsPerc/100)*totalLineStr.length();
-subsNum=2;//round(subsNumTemp);
-
+subsNum=1;//round(subsNumTemp);
+for (k=0; k<totalRange; k++){
+    rangeNum[k]=0;
+    subsPres[k]=0;
+}
 //-----------------------------------------------------------------------------------------------------set substitution location
         subsLine="";
         if (totalLine[i]=="")break;
@@ -177,7 +181,62 @@ int l=0;
         if(randEnd>=totalLineStr.length()-1){
             randEnd=totalLineStr.length()-1;
         }
-        
+
+        readRange=randEnd-randStart+1;
+        if (readRange==17){
+            ++rangeNum[0];
+            for(k=0; k<subsNum; k++){
+                if (randBaseLoc[k]>=randStart && randBaseLoc[k]<=randEnd){
+                    ++subsPres[0];
+                    break;
+                }
+        }
+        }
+        else if (readRange==18){
+            ++rangeNum[1];
+            for(k=0; k<subsNum; k++){
+                if (randBaseLoc[k]>=randStart && randBaseLoc[k]<=randEnd){
+                    ++subsPres[1];
+                    break;
+                }            
+        }
+        }
+        else if (readRange==19){
+            ++rangeNum[2];
+            for(k=0; k<subsNum; k++){
+                if (randBaseLoc[k]>=randStart && randBaseLoc[k]<=randEnd){
+                    ++subsPres[2];
+                    break;
+                }
+        }
+        }
+        else if (readRange==20){
+            ++rangeNum[3];
+            for(k=0; k<subsNum; k++){
+                if (randBaseLoc[k]>=randStart && randBaseLoc[k]<=randEnd){
+                    ++subsPres[3];
+                    break;
+                }
+        }
+        }
+        else if (readRange==21){
+            ++rangeNum[4];
+            for(k=0; k<subsNum; k++){
+                if (randBaseLoc[k]>=randStart && randBaseLoc[k]<=randEnd){
+                    ++subsPres[4];
+                    break;
+                }
+        }
+        }
+        else if (readRange==22){
+            ++rangeNum[5];
+            for(k=0; k<subsNum; k++){
+                if (randBaseLoc[k]>=randStart && randBaseLoc[k]<=randEnd){
+                    ++subsPres[5];
+                    break;
+                }
+        }
+        }
         randStartStr=to_string(randStart+1);
         randEndStr=to_string(randEnd+1);
 
@@ -193,19 +252,16 @@ int l=0;
 
         if (j==randSubsLine[l]){
             for(k=0; k<subsNum; k++){
-                if (randBaseLoc[k]>randStart&&randBaseLoc[k]<randEnd){
+                if (randBaseLoc[k]>=randStart&&randBaseLoc[k]<=randEnd){
                 m=randBaseLoc[k]-randStart+1;
                 randBaseLocChar=to_string(m);
-                randBaseLocStr+=randBaseLocChar+" "+totalLineStr[m-1]+">"+subsLine[randBaseLoc[k]];
+                randBaseLocStr+=randBaseLocChar+" "+totalLineStr[randBaseLoc[k]]+">"+subsLine[randBaseLoc[k]];
                 if (k<subsNum-1) randBaseLocStr+=",";
                 }
-                else{
-                    if (k<subsNum-1) randBaseLocStr+=",";
-                }
             }    
-        fastqStr+=headLine[i]+"; "+randStartStr+ ":" + randEndStr+"; "+ randBaseLocStr+"\n";
+        fastqStr+=headLine[i]+" "+randStartStr+ ":" + randEndStr+"  "+ randBaseLocStr+"\n";
             for(k=randStart; k<=randEnd; k++){
-                subsLineRng+=subsLine[k];
+               subsLineRng+=subsLine[k];
             }
         for(k=0; k<subsLineRng.length(); k++){
             qtyLine+="h";
@@ -215,7 +271,7 @@ int l=0;
         }
         
         else{
-        fastqStr+=headLine[i]+"; "+randStartStr+ ":" + randEndStr+"; "+"\n";
+        fastqStr+=headLine[i]+" "+randStartStr+ ":" + randEndStr+" "+"\n";
             for(k=randStart; k<=randEnd; k++){
                 totalLineRng+=totalLineStr[k];
             }
@@ -225,6 +281,13 @@ int l=0;
         fastqStr+=totalLineRng+"\n+\n"+qtyLine+"\n";            
         }
     }
+    for (j=0; j<totalRange; j++){
+        noSubsRange[j]=rangeNum[j]-subsPres[j];
+    }
+    cout<<headLine[i]<<endl<<totalLine[i].length()<<"+"<<simReadNum<<"+"<<subsNum<<"+"<<rangeNum[0]<<"+"<<rangeNum[1]<<"+"<<rangeNum[2]<<"+"<<rangeNum[3]<<
+    "+"<<rangeNum[4]<<"+"<<rangeNum[5]<<"+"<<noSubsRange[0]<<"+"<<noSubsRange[1]<<"+"<<noSubsRange[2]<<"+"<<noSubsRange[3]<<
+    "+"<<noSubsRange[4]<<"+"<<noSubsRange[5]<<"+"<<subsPres[0]<<"+"<<subsPres[1]<<"+"<<subsPres[2]<<"+"<<subsPres[3]<<
+    "+"<<subsPres[4]<<"+"<<subsPres[5]<<endl<<endl;
 }
 outfile.open(out.c_str());
     outfile<<fastqStr;
